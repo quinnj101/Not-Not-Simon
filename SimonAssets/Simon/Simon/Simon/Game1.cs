@@ -12,7 +12,7 @@ using Microsoft.Xna.Framework.Media;
 namespace Simon
 {
     public enum SimonColors {GREEN, RED, YELLOW, BLUE, NONE};
-    public enum Turn { PLAYER, COMPUTER, PLAYBACK, GAMEOVER};
+    public enum Turn { PLAYER, COMPUTER, PLAYBACK, GAMEOVER, WAIT};
 
     /// <summary>
     /// This is the main type for your game
@@ -26,7 +26,7 @@ namespace Simon
         Texture2D cursor;
         Random rand;
         bool canclick = true;
-        int level = 1;
+        int level = 0;
         float timer = 0;
         Turn turn = Turn.COMPUTER;
 
@@ -128,21 +128,26 @@ namespace Simon
                 timer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
                 
                
-                   if (PlayBackIndex <= moves.Count - 1  && timer > 1000)
+                   if (PlayBackIndex <= moves.Count - 1  && timer > 750)
                     {
                         
                         Lit = moves[PlayBackIndex];
+                        SoundManager.PlaySimonSound(Lit);
                         if (PlayBackIndex != moves.Count )
                         {
                             PlayBackIndex++;
+                            
+                            turn = Turn.WAIT;
                         }
-                       timer = 0;
+                        timer = 0;
+                        
                     }
+                 
 
 
                    if (PlayBackIndex == moves.Count)
                    {
-                       if (timer > 1000)
+                       if (timer > 750)
                        {
                            turn = Turn.PLAYER;
                            PlayerTurnIndex = 0;
@@ -154,6 +159,17 @@ namespace Simon
 
                 // If PlayBackIndex == moves.Count then turn = Turn.PLAYER (and set PlayerTurnIndex to 0)
             }
+            else if (turn == Turn.WAIT)
+            {
+                
+                timer += (float)gameTime.ElapsedGameTime.TotalMilliseconds;
+                if (timer > 500)
+                {
+                    turn = Turn.PLAYBACK;
+                    Lit = SimonColors.NONE;
+                    timer = 0;
+                }
+            }
             else if (turn == Turn.PLAYER)
             {
                 Lit = SimonColors.NONE;
@@ -162,39 +178,39 @@ namespace Simon
                 if (ms.LeftButton == ButtonState.Pressed && canclick)
                 {
 
-                        canclick = false;
-                     
+                    canclick = false;
+
+
+                    // Check to see if green button is hit.. add code to make sure the mouse button is depressed so you
+                    // don't respond to this buttonpress twice in a row
+                    Lit = getPressed();
+
+                    if (Lit == moves[PlayerTurnIndex] && PlayerTurnIndex != moves.Count - 1 && Lit != SimonColors.NONE)
+                    {
+                        PlayerTurnIndex++;
+                    }
+                    else if (Lit != moves[PlayerTurnIndex] && Lit != SimonColors.NONE)
+                    {
+                        turn = Turn.GAMEOVER;
+                    }
+                    else if (PlayerTurnIndex == moves.Count - 1)
+                    {
+
+                        level++;
                         
-                        // Check to see if green button is hit.. add code to make sure the mouse button is depressed so you
-                        // don't respond to this buttonpress twice in a row
-                        Lit = getPressed();
+                        PlayerTurnIndex = 0;
+                        timer = 0;
+                        turn = Turn.COMPUTER;
 
-                        if (Lit == moves[PlayerTurnIndex] && PlayerTurnIndex != moves.Count - 1 && Lit != SimonColors.NONE)
-                        {
-                            PlayerTurnIndex++;
-                        }
-                        else if (Lit != moves[PlayerTurnIndex] && Lit!= SimonColors.NONE)
-                        {
-                            turn = Turn.GAMEOVER;
-                        }
-                        else if (PlayerTurnIndex == moves.Count - 1)
-                        {
-                            
-                            level++;
-                            moves.Clear();
-                            PlayerTurnIndex = 0;
-                            timer = 0;
-                            turn = Turn.COMPUTER;
+                    }
+                    if (Lit != SimonColors.NONE)
+                    {
+                        // do something here!  Maybe see if Lit was the correct button to press?
 
-                        }
-                        if (Lit != SimonColors.NONE)
-                        {
-                            // do something here!  Maybe see if Lit was the correct button to press?
+                        SoundManager.PlaySimonSound(Lit);
+                    }
 
-                            SoundManager.PlaySimonSound(Lit);
-                        }
-                    
-                    
+
                 }
                 if (ms.LeftButton != ButtonState.Pressed)
                 {
@@ -291,26 +307,26 @@ namespace Simon
                 if (Lit == SimonColors.GREEN)
                 {
                     spriteBatch.Draw(simon, new Rectangle(46, 40, 238, 243), new Rectangle(0, 0, 238, 243), Color.White);
-                    SoundManager.PlaySimonSound(Lit);
+                    //SoundManager.PlaySimonSound(Lit);
                 }   
 
                 //Draw red hightlight (note that this shouldn't ALWAYS been drawn)
                 if (Lit == SimonColors.RED)
                 {
                     spriteBatch.Draw(simon, new Rectangle(46 + 277, 40, 238, 243), new Rectangle(277, 0, 238, 243), Color.White);
-                    SoundManager.PlaySimonSound(Lit);
+                    //SoundManager.PlaySimonSound(Lit);
                 }
                 // Draw yellow hightlight (note that this shouldn't ALWAYS been drawn)
                 if (Lit == SimonColors.YELLOW)
                 {
                     spriteBatch.Draw(simon, new Rectangle(46, 40 + 276, 238, 243), new Rectangle(0, 276, 238, 243), Color.White);
-                    SoundManager.PlaySimonSound(Lit);
+                    //SoundManager.PlaySimonSound(Lit);
                 }
                 // Draw blue hightlight (note that this shouldn't ALWAYS been drawn)
                 if (Lit == SimonColors.BLUE)
                 {
                     spriteBatch.Draw(simon, new Rectangle(46 + 277, 40 + 276, 238, 243), new Rectangle(277, 276, 238, 243), Color.White);
-                    SoundManager.PlaySimonSound(Lit);
+                    //SoundManager.PlaySimonSound(Lit);
                 }
                 // Draw cursor
                 spriteBatch.Draw(cursor, new Vector2(ms.X, ms.Y), Color.White);
